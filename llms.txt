@@ -7,4 +7,4 @@
 - /in-view: useInView<T>(threshold=0.35) → [ref, inView]
 - /count-up: useCountUp(target, start, durationMs=1600) → number
 - /marquee: useMarquee<T>({ speed=40 }) → ref for a track with two identical groups; drag + fling; no auto-motion with reduced motion
-- Peer: react. Licence: Sharadox Open Source Licence 0.1.0
+- Peer: react. License: Sharadox Open Source License 0.1.0
