@@ -1,0 +1,10 @@
+# @sharadox/animation-web-library
+
+> React animations (Motion-based where needed); reduced motion respected.
+
+- /reveal: <Reveal delay y=24 blur=6 margin="-12% 0px" className>children</Reveal>
+- /scroll-word: <ScrollWords text className offset=["start 80%","end 40%"] opacity=[0.12,1] span=1.5 />
+- /in-view: useInView<T>(threshold=0.35) → [ref, inView]
+- /count-up: useCountUp(target, start, durationMs=1600) → number
+- /marquee: useMarquee<T>({ speed=40 }) → ref for a track with two identical groups; drag + fling; no auto-motion with reduced motion
+- Peer: react. Licence: Sharadox Open Source Licence 0.1.0
