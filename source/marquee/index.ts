@@ -3,7 +3,8 @@ import { useEffect, useRef } from "react";
 import type { MarqueeOptions } from "@sharadox/animation-web-library/marquee/type";
 
 /**
- * An endless strip that slides on its own and can be grabbed and flung by hand (mouse or touch), with inertia.
+ * An endless strip that slides on its own and can be grabbed and flung by hand (mouse or touch), with inertia, or
+ * scrolled sideways (a trackpad's horizontal swipe, or Shift with a mouse wheel).
  * Attach the returned reference to the track: an element holding two identical groups side by side, so moving it by
  * one group's width (half the track) looks the same. It does not move by itself when the visitor prefers reduced
  * motion, but can still be dragged.
@@ -57,8 +58,16 @@ export function useMarquee<Track extends HTMLElement>({ speed = 40 }: MarqueeOpt
       dragging = false;
       if (track.hasPointerCapture(event.pointerId)) track.releasePointerCapture(event.pointerId);
     };
+    // Sideways scrolling moves the strip; vertical scrolling is left to the page.
+    const wheel = (event: WheelEvent) => {
+      const delta = event.shiftKey && !event.deltaX ? event.deltaY : event.deltaX;
+      if (Math.abs(delta) <= Math.abs(event.shiftKey ? 0 : event.deltaY)) return;
+      event.preventDefault();
+      offset -= delta;
+    };
     velocity = -automatic;
     track.addEventListener("pointerdown", down);
+    track.addEventListener("wheel", wheel, { passive: false });
     track.addEventListener("pointermove", move);
     track.addEventListener("pointerup", up);
     track.addEventListener("pointercancel", up);
@@ -69,6 +78,7 @@ export function useMarquee<Track extends HTMLElement>({ speed = 40 }: MarqueeOpt
       track.removeEventListener("pointermove", move);
       track.removeEventListener("pointerup", up);
       track.removeEventListener("pointercancel", up);
+      track.removeEventListener("wheel", wheel);
     };
   }, [speed]);
   return reference;

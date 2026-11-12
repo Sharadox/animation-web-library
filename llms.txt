@@ -6,6 +6,6 @@
 - /scroll-word: <ScrollWords text className offset=["start 80%","end 40%"] opacity=[0.12,1] span=1.5 />
 - /in-view: useInView<T>(threshold=0.35) → [ref, inView]
 - /count-up: useCountUp(target, start, durationMs=1600) → number
-- /marquee: useMarquee<T>({ speed=40 }) → ref for a track with two identical groups; drag + fling; no auto-motion with reduced motion
+- /marquee: useMarquee<T>({ speed=40 }) → ref for a track with two identical groups; drag + fling; horizontal wheel or Shift + wheel scrolls it (vertical wheel left to the page); no auto-motion with reduced motion
 - Peer: react. License: Sharadox Open Source License 0.1.0
 - Reveal and useCountUp show their final state when mounted during a soft navigation (web-library isSoftNavigation, e.g. a language switch)
