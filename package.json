@@ -1,6 +1,6 @@
 {
   "name": "@sharadox/animation-web-library",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Scroll and number animations for React: reveal on view, words lighting up on scroll, in-view, count-up and an endless marquee you can drag.",
   "private": false,
   "license": "SEE LICENSE IN LICENCA.md",
@@ -86,7 +86,7 @@
     "vitest": "^5.1.0"
   },
   "dependencies": {
-    "@sharadox/web-library": "^0.5.0",
+    "@sharadox/web-library": "^0.6.0",
     "motion": "^12.43.0"
   },
   "peerDependencies": {
