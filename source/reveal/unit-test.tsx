@@ -1,5 +1,8 @@
-import { render, screen } from "@testing-library/react";
-import { describe, expect, test } from "vitest";
+import { cleanup, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, test } from "vitest";
+import { beginSoftNavigation } from "@sharadox/web-library/navigation/soft-navigation";
+
+afterEach(cleanup);
 import { Reveal } from "@sharadox/animation-web-library/reveal";
 
 describe("Reveal", () => {
@@ -20,5 +23,12 @@ describe("Reveal", () => {
     const element = screen.getByText("Plain");
     expect(element.style.filter).toBe("");
     expect(element.style.transform).toContain("translateY(8px)");
+  });
+
+  test("shows its children at once when the page is rebuilt in place", () => {
+    beginSoftNavigation();
+    render(<Reveal>Settled</Reveal>);
+    expect(screen.getByText("Settled").style.opacity).toBe("");
+    beginSoftNavigation(0);
   });
 });
