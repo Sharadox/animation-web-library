@@ -8,3 +8,4 @@
 - /count-up: useCountUp(target, start, durationMs=1600) → number
 - /marquee: useMarquee<T>({ speed=40 }) → ref for a track with two identical groups; drag + fling; no auto-motion with reduced motion
 - Peer: react. License: Sharadox Open Source License 0.1.0
+- Reveal and useCountUp show their final state when mounted during a soft navigation (web-library isSoftNavigation, e.g. a language switch)

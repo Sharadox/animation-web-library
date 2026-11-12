@@ -1,6 +1,7 @@
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { useCountUp } from "@sharadox/animation-web-library/count-up";
+import { beginSoftNavigation } from "@sharadox/web-library/navigation/soft-navigation";
 
 const prefersReducedMotion = (reduced: boolean) =>
   vi.spyOn(window, "matchMedia").mockReturnValue({ matches: reduced } as MediaQueryList);
@@ -12,6 +13,14 @@ afterEach(() => {
 });
 
 describe("useCountUp", () => {
+  test("starts at the target when the page is rebuilt in place", () => {
+    prefersReducedMotion(false);
+    beginSoftNavigation();
+    const { result } = renderHook(() => useCountUp(100, true));
+    expect(result.current).toBe(100);
+    beginSoftNavigation(0);
+  });
+
   test("waits for the start signal", () => {
     prefersReducedMotion(false);
     const { result } = renderHook(() => useCountUp(100, false));
