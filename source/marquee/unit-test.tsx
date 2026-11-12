@@ -74,6 +74,29 @@ describe("useMarquee", () => {
     unmount();
   });
 
+  test("scrolls sideways with a trackpad or Shift and the wheel, leaving vertical scrolling to the page", () => {
+    prefersReducedMotion(true);
+    const { getByTestId } = render(<Strip />);
+    const track = getByTestId("track");
+    const wheel = (init: WheelEventInit) => {
+      const event = new WheelEvent("wheel", { cancelable: true, ...init });
+      // The test browser ignores modifier keys given to the constructor.
+      Object.defineProperty(event, "shiftKey", { value: !!init.shiftKey });
+      track.dispatchEvent(event);
+      act(() => vi.advanceTimersByTime(20));
+      return event.defaultPrevented;
+    };
+    expect(wheel({ deltaX: 40, deltaY: 5 })).toBe(true);
+    expect(offset(track)).toBe(-40);
+    expect(wheel({ deltaY: 30, shiftKey: true })).toBe(true);
+    expect(offset(track)).toBe(-70);
+    expect(wheel({ deltaX: -10, shiftKey: true })).toBe(true);
+    expect(offset(track)).toBe(-60);
+    expect(wheel({ deltaX: 2, deltaY: 50 })).toBe(false);
+    expect(wheel({ deltaY: 0, shiftKey: true })).toBe(false);
+    expect(offset(track)).toBe(-60);
+  });
+
   test("doesn't wrap before the track has a width", () => {
     prefersReducedMotion(false);
     Object.defineProperty(HTMLElement.prototype, "scrollWidth", { configurable: true, get: () => 0 });
