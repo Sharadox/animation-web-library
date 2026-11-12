@@ -4,14 +4,21 @@ import { isSoftNavigation } from "@sharadox/web-library/navigation/soft-navigati
 
 /**
  * Counts from 0 to `target` with an ease-out once `start` is true (for example from `useInView`). Jumps straight to
- * the target when the visitor prefers reduced motion, and starts there when the page is rebuilt in place (a soft
- * navigation, such as switching language).
+ * the target when the visitor prefers reduced motion, or when it starts during a soft navigation (the page rebuilt in
+ * place, such as switching language), so a number already on screen doesn't count again.
  */
 export function useCountUp(target: number, start: boolean, durationMilliseconds = 1600): number {
-  const [settled] = useState(isSoftNavigation);
-  const [value, setValue] = useState(settled ? target : 0);
+  const [value, setValue] = useState(0);
   useEffect(() => {
-    if (!start || settled) return;
+    if (!start) return;
+    if (isSoftNavigation()) {
+      // A microtask, not an animation frame: frames are paused while a view transition waits for the new page.
+      let live = true;
+      queueMicrotask(() => live && setValue(target));
+      return () => {
+        live = false;
+      };
+    }
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       const frame = requestAnimationFrame(() => setValue(target));
       return () => cancelAnimationFrame(frame);
@@ -25,6 +32,6 @@ export function useCountUp(target: number, start: boolean, durationMilliseconds 
     };
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
-  }, [target, start, durationMilliseconds, settled]);
+  }, [target, start, durationMilliseconds]);
   return value;
 }

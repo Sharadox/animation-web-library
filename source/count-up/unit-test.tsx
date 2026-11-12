@@ -13,11 +13,16 @@ afterEach(() => {
 });
 
 describe("useCountUp", () => {
-  test("starts at the target when the page is rebuilt in place", () => {
+  test("jumps to the target when it starts while the page is rebuilt in place", async () => {
     prefersReducedMotion(false);
     beginSoftNavigation();
-    const { result } = renderHook(() => useCountUp(100, true));
+    const { result, unmount } = renderHook(() => useCountUp(100, true));
+    await act(async () => {});
     expect(result.current).toBe(100);
+    unmount();
+    const second = renderHook(() => useCountUp(100, true));
+    second.unmount();
+    await act(async () => {});
     beginSoftNavigation(0);
   });
 
