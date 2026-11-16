@@ -74,27 +74,46 @@ describe("useMarquee", () => {
     unmount();
   });
 
-  test("scrolls sideways with a trackpad or Shift and the wheel, leaving vertical scrolling to the page", () => {
+  test("glides sideways with a trackpad or Shift and the wheel, leaving vertical scrolling to the page", () => {
     prefersReducedMotion(true);
     const { getByTestId } = render(<Strip />);
     const track = getByTestId("track");
+    const page = vi.fn();
+    window.addEventListener("wheel", page);
     const wheel = (init: WheelEventInit) => {
-      const event = new WheelEvent("wheel", { cancelable: true, ...init });
+      const event = new WheelEvent("wheel", { cancelable: true, bubbles: true, ...init });
       // The test browser ignores modifier keys given to the constructor.
       Object.defineProperty(event, "shiftKey", { value: !!init.shiftKey });
       track.dispatchEvent(event);
-      act(() => vi.advanceTimersByTime(20));
       return event.defaultPrevented;
     };
     expect(wheel({ deltaX: 40, deltaY: 5 })).toBe(true);
-    expect(offset(track)).toBe(-40);
+    act(() => vi.advanceTimersByTime(20));
+    // Part of the way there after a frame, then all of it.
+    expect(offset(track)).toBeLessThan(0);
+    expect(offset(track)).toBeGreaterThan(-40);
+    act(() => vi.advanceTimersByTime(2000));
+    expect(offset(track)).toBeCloseTo(-40, 1);
     expect(wheel({ deltaY: 30, shiftKey: true })).toBe(true);
-    expect(offset(track)).toBe(-70);
     expect(wheel({ deltaX: -10, shiftKey: true })).toBe(true);
-    expect(offset(track)).toBe(-60);
+    // A wheel counting in lines moves by lines' worth of pixels.
+    expect(wheel({ deltaX: 1, deltaMode: WheelEvent.DOM_DELTA_LINE })).toBe(true);
+    act(() => vi.advanceTimersByTime(2000));
+    expect(offset(track)).toBeCloseTo(-76, 1);
+    // The page's own scroller never hears sideways scrolls taken by the strip.
+    expect(page).not.toHaveBeenCalled();
     expect(wheel({ deltaX: 2, deltaY: 50 })).toBe(false);
     expect(wheel({ deltaY: 0, shiftKey: true })).toBe(false);
-    expect(offset(track)).toBe(-60);
+    expect(page).toHaveBeenCalledTimes(2);
+    act(() => vi.advanceTimersByTime(2000));
+    expect(offset(track)).toBeCloseTo(-76, 1);
+    // Grabbing the strip drops whatever glide is left.
+    wheel({ deltaX: 100 });
+    pointer(track, "pointerdown", 0, 0);
+    pointer(track, "pointerup", 0, 1);
+    act(() => vi.advanceTimersByTime(2000));
+    expect(offset(track)).toBeCloseTo(-76, 1);
+    window.removeEventListener("wheel", page);
   });
 
   test("doesn't wrap before the track has a width", () => {
