@@ -17,3 +17,15 @@ test("takes its own opacity range, offsets and pace", () => {
   );
   expect(container.querySelector<HTMLSpanElement>("p > span")!.style.opacity).toBe("0.3");
 });
+
+test("lights the last word fully by the end of the scroll", async () => {
+  const { motionValue } = await import("motion/react");
+  const { ScrollWord } = await import("@sharadox/animation-web-library/scroll-word/word");
+  const progress = motionValue(1);
+  const { container } = render(
+    <p>
+      <ScrollWord word="last" index={9} count={10} progress={progress} opacity={[0.12, 1]} span={1.5} />
+    </p>,
+  );
+  expect(container.querySelector("span")!.style.opacity).toBe("1");
+});
