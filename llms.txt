@@ -10,3 +10,4 @@
 - /marquee: useMarquee<T>({ speed=40 }) → ref for a track with two identical groups; drag + fling; horizontal wheel or Shift + wheel glides it smoothly (eased, line-mode wheels in pixels; the event stops at the strip so a page smooth scroller doesn't also move; vertical wheel left to the page); no auto-motion with reduced motion
 - Peer: react. License: Sharadox Open Source License 0.1.0
 - Reveal and useCountUp show their final state when mounted during a soft navigation (web-library isSoftNavigation, e.g. a language switch)
+- /scroll-word/word: ScrollWord: one word of a ScrollWords sentence, brightening as scroll progress reaches its place (used by ScrollWords)
