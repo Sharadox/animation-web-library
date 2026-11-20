@@ -4,8 +4,7 @@ import { useLayoutEffect, useRef, useState } from "react";
 import { isOnScreen } from "@sharadox/web-library/layout/on-screen";
 import { isSoftNavigation } from "@sharadox/web-library/navigation/soft-navigation";
 import type { RevealProperties } from "@sharadox/animation-web-library/reveal/type";
-
-const EASE = [0.22, 1, 0.36, 1] as const;
+import { EASE } from "@sharadox/animation-web-library/ease";
 
 /**
  * Fades, lifts and (optionally) unblurs its children into place the first time they scroll into view. When the page

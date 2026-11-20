@@ -2,6 +2,7 @@
 
 > React animations (Motion-based where needed); reduced motion respected.
 
+- /ease: EASE = [0.22, 1, 0.36, 1] (cubic-bezier), the one easing every Sharadox animation uses (Motion `ease`, or CSS cubic-bezier)
 - /reveal: <Reveal delay y=24 blur=6 margin="-12% 0px" className>children</Reveal>
 - /scroll-word: <ScrollWords text className offset=["start 80%","end 40%"] opacity=[0.12,1] span=1.5 />
 - /in-view: useInView<T>(threshold=0.35) → [ref, inView]
