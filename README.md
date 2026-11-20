@@ -24,6 +24,12 @@ const [card, seen] = useInView<HTMLDivElement>();
 const followers = useCountUp(12480, seen);
 ```
 
+### Also exported
+
+Smaller parts, mostly building blocks of the main exports:
+
+- `…/scroll-word/word`: ScrollWord: one word of a ScrollWords sentence, brightening as scroll progress reaches its place (used by ScrollWords)
+
 ## Develop
 
 `pnpm verify` runs formatting, lint, type-check, tests with 100% coverage and the build. Branches follow `<feature>.development` → `development` → `index`, and releases are `v<version>` tags on `index`.
