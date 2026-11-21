@@ -11,3 +11,4 @@
 - Peer: react. License: Sharadox Open Source License 0.1.0
 - Reveal and useCountUp show their final state when mounted during a soft navigation (web-library isSoftNavigation, e.g. a language switch)
 - /scroll-word/word: ScrollWord: one word of a ScrollWords sentence, brightening as scroll progress reaches its place (used by ScrollWords)
+- `/offscreen-loops` <OffscreenLoops within?="main" margin?="200px"/>: pauses each endless, clock-driven animation (and each SVG animated with SMIL <animate>) while what it moves is off screen and plays it on before it returns; only resumes what it paused (entrances, scroll-driven and style-paused animations untouched); put it once in the page

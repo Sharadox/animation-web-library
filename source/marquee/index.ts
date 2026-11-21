@@ -13,7 +13,9 @@ const LINE = 16;
  * smooth scrolling instead of jumping.
  * Attach the returned reference to the track: an element holding two identical groups side by side, so moving it by
  * one group's width (half the track) looks the same. It does not move by itself when the visitor prefers reduced
- * motion, but can still be dragged.
+ * motion, but can still be dragged. It only works while it is on screen: off screen it rests where it was (nobody
+ * sees it) and carries on from there when it comes back, and it measures the track only when its size changes,
+ * never every frame, so it costs nothing while the page is read elsewhere.
  */
 export function useMarquee<Track extends HTMLElement>({ speed = 40 }: MarqueeOptions = {}) {
   const reference = useRef<Track>(null);
@@ -30,8 +32,12 @@ export function useMarquee<Track extends HTMLElement>({ speed = 40 }: MarqueeOpt
     let lastTime = 0;
     let previous = performance.now();
     let frame = 0;
+    // One group's width, measured when the track's size changes (fonts arriving, a resize), not every frame.
+    let half = track.scrollWidth / 2;
+    const measure = () => {
+      half = track.scrollWidth / 2;
+    };
     const wrap = () => {
-      const half = track.scrollWidth / 2;
       if (half > 0) offset = ((offset % half) - half) % half || 0;
     };
     const tick = (now: number) => {
@@ -48,6 +54,23 @@ export function useMarquee<Track extends HTMLElement>({ speed = 40 }: MarqueeOpt
       track.style.transform = `translate3d(${offset}px, 0, 0)`;
       frame = requestAnimationFrame(tick);
     };
+    // Runs only while the strip is on screen; back on screen, it starts from the moment it returns, without a jump.
+    let running = false;
+    const start = () => {
+      if (running) return;
+      running = true;
+      previous = performance.now();
+      frame = requestAnimationFrame(tick);
+    };
+    const stop = () => {
+      running = false;
+      cancelAnimationFrame(frame);
+    };
+    const visibility =
+      typeof IntersectionObserver === "undefined"
+        ? undefined
+        : new IntersectionObserver(([entry]) => (entry!.isIntersecting ? start() : stop()));
+    const size = typeof ResizeObserver === "undefined" ? undefined : new ResizeObserver(measure);
     const down = (event: PointerEvent) => {
       dragging = true;
       lastX = event.clientX;
@@ -84,9 +107,13 @@ export function useMarquee<Track extends HTMLElement>({ speed = 40 }: MarqueeOpt
     track.addEventListener("pointermove", move);
     track.addEventListener("pointerup", up);
     track.addEventListener("pointercancel", up);
-    frame = requestAnimationFrame(tick);
+    start();
+    visibility?.observe(track);
+    size?.observe(track);
     return () => {
-      cancelAnimationFrame(frame);
+      stop();
+      visibility?.disconnect();
+      size?.disconnect();
       track.removeEventListener("pointerdown", down);
       track.removeEventListener("pointermove", move);
       track.removeEventListener("pointerup", up);
