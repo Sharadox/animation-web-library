@@ -97,3 +97,40 @@ test("takes its own area and margin, and does nothing where the browser can't te
   vi.stubGlobal("IntersectionObserver", undefined);
   expect(() => render(<OffscreenLoops />)).not.toThrow();
 });
+
+test("rests SVG drawings animated with SMIL while off screen, resuming only those it paused", () => {
+  vi.stubGlobal("DocumentTimeline", Timeline);
+  observed.length = 0;
+  observe();
+  document.body.innerHTML =
+    "<main><svg id='moving'><path><animate attributeName='d'></animate></path></svg><svg id='held'><set></set></svg><svg id='still'></svg></main>";
+  document.getAnimations = () => [];
+  const drawing = (id: string, initiallyPaused = false) => {
+    const element = document.getElementById(id) as unknown as SVGSVGElement;
+    let isPaused = initiallyPaused;
+    Object.assign(element, {
+      animationsPaused: () => isPaused,
+      pauseAnimations: vi.fn(() => (isPaused = true)),
+      unpauseAnimations: vi.fn(() => (isPaused = false)),
+    });
+    return element;
+  };
+  const moving = drawing("moving");
+  const held = drawing("held", true);
+  render(<OffscreenLoops />);
+  expect(observed).toEqual([moving, held]);
+  seen([
+    { target: moving, isIntersecting: false },
+    { target: held, isIntersecting: false },
+  ]);
+  expect(moving.pauseAnimations).toHaveBeenCalled();
+  expect(held.pauseAnimations).not.toHaveBeenCalled();
+  seen([
+    { target: moving, isIntersecting: true },
+    { target: held, isIntersecting: true },
+  ]);
+  expect(moving.unpauseAnimations).toHaveBeenCalledTimes(1);
+  expect(held.unpauseAnimations).not.toHaveBeenCalled();
+  seen([{ target: moving, isIntersecting: true }]);
+  expect(moving.unpauseAnimations).toHaveBeenCalledTimes(1);
+});
