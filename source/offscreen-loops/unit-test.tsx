@@ -134,3 +134,16 @@ test("rests SVG drawings animated with SMIL while off screen, resuming only thos
   seen([{ target: moving, isIntersecting: true }]);
   expect(moving.unpauseAnimations).toHaveBeenCalledTimes(1);
 });
+
+test("still rests SMIL drawings where the browser can't list CSS animations", () => {
+  vi.stubGlobal("DocumentTimeline", Timeline);
+  observed.length = 0;
+  observe();
+  document.body.innerHTML = "<main><svg id='moving'><animate></animate></svg></main>";
+  const original = document.getAnimations;
+  // @ts-expect-error: a browser without the Web Animations API.
+  document.getAnimations = undefined;
+  expect(() => render(<OffscreenLoops />)).not.toThrow();
+  expect(observed).toEqual([document.getElementById("moving")]);
+  document.getAnimations = original;
+});

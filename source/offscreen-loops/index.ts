@@ -52,7 +52,9 @@ export function OffscreenLoops({ within = "main", margin = "200px" }: OffscreenL
       { rootMargin: `${margin} 0px` },
     );
     const area = document.querySelector(within);
-    for (const animation of document.getAnimations().filter(isLoop)) {
+    // Browsers (and test environments) without the Web Animations API leave CSS loops alone.
+    const running = typeof document.getAnimations === "function" ? document.getAnimations() : [];
+    for (const animation of running.filter(isLoop)) {
       const target = targetOf(animation);
       if (!target || !area?.contains(target)) continue;
       loops.set(target, [...(loops.get(target) ?? []), animation]);
