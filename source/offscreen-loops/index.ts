@@ -2,36 +2,49 @@
 import { useEffect } from "react";
 import type { OffscreenLoopsProperties } from "@sharadox/animation-web-library/offscreen-loops/type";
 
-/** Every section of the page's main content. */
-export const PAGE_SECTIONS = "main section";
-
 /** A loop that runs on the page's own clock (not one tied to scrolling), forever. */
 const isLoop = (animation: Animation) =>
   animation.timeline instanceof DocumentTimeline && animation.effect?.getTiming().iterations === Infinity;
 
+/** The element an animation moves (the element itself for its ::before and ::after). */
+const targetOf = (animation: Animation) => (animation.effect as KeyframeEffect | null)?.target ?? null;
+
 /**
- * Lets endless CSS animations rest while their part of the page is off screen: they pause where they are and play
- * on from there a little before the part comes back, so nothing looks different but the page stops working for
- * what nobody sees (main-thread animations of shadows, backgrounds or filters cost every frame, wherever the visitor
- * is). Entrances and scroll-driven animations are left alone. Put it once in the page.
+ * Lets endless CSS animations rest while what they move is off screen: each pauses where it is and plays on from
+ * there a little before it comes back, so nothing looks different but the page stops working for what nobody sees
+ * (main-thread animations of shadows, backgrounds or filters cost every frame, wherever the visitor is). It only
+ * resumes what it paused itself, and leaves entrances and scroll-driven animations alone. Put it once in the page.
  *
  * @example
  * <OffscreenLoops />
  */
-export function OffscreenLoops({ selector = PAGE_SECTIONS, margin = "200px" }: OffscreenLoopsProperties) {
+export function OffscreenLoops({ within = "main", margin = "200px" }: OffscreenLoopsProperties) {
   useEffect(() => {
     if (typeof IntersectionObserver === "undefined") return;
+    const loops = new Map<Element, Animation[]>();
+    const paused = new WeakSet<Animation>();
     const observer = new IntersectionObserver(
       (entries) => {
         for (const { target, isIntersecting } of entries)
-          for (const animation of target.getAnimations({ subtree: true }).filter(isLoop))
-            if (isIntersecting) animation.play();
-            else animation.pause();
+          for (const animation of loops.get(target) ?? [])
+            if (!isIntersecting && animation.playState === "running") {
+              animation.pause();
+              paused.add(animation);
+            } else if (isIntersecting && paused.has(animation)) {
+              paused.delete(animation);
+              animation.play();
+            }
       },
       { rootMargin: `${margin} 0px` },
     );
-    for (const part of document.querySelectorAll(selector)) observer.observe(part);
+    const area = document.querySelector(within);
+    for (const animation of document.getAnimations().filter(isLoop)) {
+      const target = targetOf(animation);
+      if (!target || !area?.contains(target)) continue;
+      loops.set(target, [...(loops.get(target) ?? []), animation]);
+    }
+    for (const target of loops.keys()) observer.observe(target);
     return () => observer.disconnect();
-  }, [selector, margin]);
+  }, [within, margin]);
   return null;
 }
