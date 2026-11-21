@@ -132,3 +132,68 @@ test("does nothing until the reference is attached", () => {
   }
   expect(() => render(<Detached />)).not.toThrow();
 });
+
+test("rests while off screen and carries on from where it was, without a jump, when it comes back", () => {
+  prefersReducedMotion(false);
+  let seen: (entries: { isIntersecting: boolean }[]) => void = () => {};
+  const disconnect = vi.fn();
+  vi.stubGlobal(
+    "IntersectionObserver",
+    class {
+      constructor(callback: typeof seen) {
+        seen = callback;
+      }
+      observe() {}
+      disconnect = disconnect;
+    },
+  );
+  const { getByTestId, unmount } = render(<Strip speed={100} />);
+  const track = getByTestId("track");
+  act(() => vi.advanceTimersByTime(500));
+  const before = offset(track);
+  act(() => seen([{ isIntersecting: false }]));
+  act(() => vi.advanceTimersByTime(5000));
+  expect(offset(track)).toBe(before);
+  act(() => seen([{ isIntersecting: true }]));
+  act(() => seen([{ isIntersecting: true }]));
+  act(() => vi.advanceTimersByTime(100));
+  // About a tenth of a second's travel, not the five seconds it was away.
+  expect(before - offset(track)).toBeLessThan(20);
+  expect(before - offset(track)).toBeGreaterThan(0);
+  unmount();
+  expect(disconnect).toHaveBeenCalled();
+  vi.unstubAllGlobals();
+});
+
+test("measures the track when its size changes, not every frame", () => {
+  prefersReducedMotion(false);
+  let resized = () => {};
+  vi.stubGlobal(
+    "ResizeObserver",
+    class {
+      constructor(callback: () => void) {
+        resized = callback;
+      }
+      observe() {}
+      disconnect() {}
+    },
+  );
+  const width = vi.fn(() => 1000);
+  Object.defineProperty(HTMLElement.prototype, "scrollWidth", { configurable: true, get: width });
+  render(<Strip speed={100} />);
+  act(() => vi.advanceTimersByTime(1000));
+  expect(width).toHaveBeenCalledTimes(1);
+  act(() => resized());
+  expect(width).toHaveBeenCalledTimes(2);
+  vi.unstubAllGlobals();
+});
+
+test("works where the browser has neither observer", () => {
+  prefersReducedMotion(false);
+  vi.stubGlobal("IntersectionObserver", undefined);
+  vi.stubGlobal("ResizeObserver", undefined);
+  const { getByTestId } = render(<Strip speed={100} />);
+  act(() => vi.advanceTimersByTime(1000));
+  expect(offset(getByTestId("track"))).toBeLessThan(0);
+  vi.unstubAllGlobals();
+});
